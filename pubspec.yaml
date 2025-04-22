@@ -1,0 +1,38 @@
+name: tiktok_app
+description: "A new Flutter project."
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.7.0-209.1.beta
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  camera: ^0.11.1
+  permission_handler: ^12.0.0+1
+  image_picker: ^1.1.2
+  path_provider: ^2.1.5
+  video_player: ^2.9.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.3
+  font_awesome_flutter: ^10.8.0
+  flutter_native_splash: ^2.3.10
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+
+flutter_icons:
+  android: true
+  ios: 
+  image_path: "assets/images/logo.png"  # PNG format only
+
+
