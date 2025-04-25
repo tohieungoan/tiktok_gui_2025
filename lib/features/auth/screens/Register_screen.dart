@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:tiktok_app/blocs/auth/auth_bloc.dart';
+import 'package:tiktok_app/blocs/auth/auth_event.dart';
 import 'package:tiktok_app/core/constants.dart';
 import 'package:tiktok_app/core/widgets/CircularCheckbox.dart';
 import 'package:tiktok_app/core/widgets/button_login.dart';
 import 'package:tiktok_app/core/widgets/line.dart';
 import 'package:tiktok_app/core/widgets/text_field.dart';
+import 'package:tiktok_app/core/widgets/toast.dart';
+import 'package:tiktok_app/features/auth/controllers/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -83,11 +88,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           String pattern = r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$';
                           RegExp regex = RegExp(pattern);
                           if (email.isEmpty) {
-                            print("Email không được để trống");
+                            showErrorToast("Email không được để trống");
                           } else if (!regex.hasMatch(email)) {
-                            print("Email không đúng định dạng");
+                            showErrorToast("Email không hợp lệ");
                           } else {
-                            Navigator.pushNamed(context, '/createpassword');
+                            Navigator.pushNamed(
+                              context,
+                              '/createpassword',
+                              arguments: email,
+                            );
                           }
                         },
                         icon: null,
@@ -110,7 +119,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     width: screenWidth * 0.9,
                     child: ButtonLogin(
                       onPressed: () {
-                        print("Đăng nhập facebook");
+                        _loginWithFacebook(context);
                       },
                       icon: const FaIcon(
                         FontAwesomeIcons.facebook,
@@ -125,7 +134,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     width: screenWidth * 0.9,
                     child: ButtonLogin(
                       onPressed: () {
-                        print("Đăng nhập google");
+                        _loginWithGoogle(context);
                       },
                       icon: const FaIcon(
                         FontAwesomeIcons.google,
@@ -188,7 +197,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      Navigator.pushReplacementNamed(context, '/login');
+                      Navigator.pushReplacementNamed(context, '/');
                     },
                     child: Center(
                       child: Text(
@@ -209,4 +218,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     );
   }
+}
+
+void _loginWithFacebook(BuildContext context) {
+  BlocProvider.of<AuthBloc>(
+    context,
+  ).add(FacebookLoginRequested(context: context));
+}
+
+void _loginWithGoogle(BuildContext context) {
+  BlocProvider.of<AuthBloc>(
+    context,
+  ).add(GoogleLoginRequested(context: context));
+}
+
+void _loginWithEmail(BuildContext context, String email, String password) {
+  BlocProvider.of<AuthBloc>(context).add(
+    EmailLoginRequested(context: context, email: email, password: password),
+  );
 }

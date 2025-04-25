@@ -1,0 +1,39 @@
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
+import 'package:tiktok_app/config/config.dart';
+import 'package:tiktok_app/features/auth/controllers/get_accessToken.dart';
+import 'package:tiktok_app/models/User.dart';
+
+class GetUserByToken {
+  static const String Url = "user/current-user/";
+  static Future<Userapp?> getUserByToken() async {
+    try {
+      String? accessToken = await getAcessService.getAccessToken();
+      if (accessToken == null) {
+        print("Không tìm thấy access token!");
+        return null;
+      }
+      final response = await http.get(
+        Uri.parse(Config.baseUrl + Url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        Userapp user = Userapp.fromJson(responseData);
+        print("Thông tin người dùng: ${user.toJson()}");
+        return user;
+      } else {
+        print("Lỗi khi lấy thông tin người dùng: ${response.statusCode}");
+        print("Response body: ${response.body}");
+        return null;
+      }
+    } catch (e) {
+      print("Lỗi khi lấy thông tin người dùng: $e");
+      return null;
+    }
+  }
+}

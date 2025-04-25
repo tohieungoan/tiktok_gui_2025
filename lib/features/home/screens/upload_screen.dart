@@ -1,10 +1,12 @@
- import 'dart:async';
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:tiktok_app/features/home/screens/Resuilt.dart';
 import 'package:video_player/video_player.dart';
+import 'package:path_provider/path_provider.dart';
 
 class UploadScreen extends StatefulWidget {
   const UploadScreen({super.key});
@@ -19,13 +21,15 @@ class _UploadScreenState extends State<UploadScreen> {
   int _selectedCameraIndex = 0;
   bool isRecordingMode = false;
   bool isRecording = false;
-  bool isPaused = false; // Track if recording is paused
+  bool isPaused = false;
 
   XFile? _capturedFile;
+  XFile? capturedMedia;
+
   VideoPlayerController? _videoPlayerController;
 
   Timer? _recordingTimer;
-  int _recordingDuration = 0; // Duration in seconds
+  int _recordingDuration = 0;
 
   @override
   void initState() {
@@ -34,13 +38,12 @@ class _UploadScreenState extends State<UploadScreen> {
   }
 
   Future<void> _checkPermissions() async {
-    PermissionStatus cameraStatus = await Permission.camera.request();
-    PermissionStatus micStatus = await Permission.microphone.request();
+    final cameraStatus = await Permission.camera.request();
+    final micStatus = await Permission.microphone.request();
 
     if (cameraStatus.isGranted && micStatus.isGranted) {
       _initCamera();
-    } else if (cameraStatus.isPermanentlyDenied ||
-        micStatus.isPermanentlyDenied) {
+    } else if (cameraStatus.isPermanentlyDenied || micStatus.isPermanentlyDenied) {
       openAppSettings();
     } else {
       print("Permission denied for camera or microphone");
@@ -67,14 +70,22 @@ class _UploadScreenState extends State<UploadScreen> {
       ResolutionPreset.high,
       enableAudio: true,
     );
-    _controller!
-        .initialize()
-        .then((_) {
-          if (mounted) setState(() {});
-        })
-        .catchError((e) {
-          print("Error initializing camera: $e");
-        });
+    _controller!.initialize().then((_) {
+      if (mounted) setState(() {});
+    }).catchError((e) {
+      print("Error initializing camera: $e");
+    });
+  }
+
+  void goToNextStep() {
+    if (capturedMedia != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ResultScreen(mediaPath: capturedMedia!.path),
+        ),
+      );
+    }
   }
 
   void _switchCamera() {
@@ -83,65 +94,76 @@ class _UploadScreenState extends State<UploadScreen> {
     _startCamera(_selectedCameraIndex);
   }
 
-  Future<void> _startStopRecording() async {
-    if (!_controller!.value.isInitialized) return;
-
-    try {
-      if (isRecording) {
-        if (isPaused) {
-          // Resume recording by re-initiating video recording
-          await _controller!.startVideoRecording();
-          _startRecordingTimer();
-          setState(() {
-            isPaused = false;
-          });
-        } else {
-          // Pause recording
-          await _controller!.stopVideoRecording();
-          _stopRecordingTimer();
-          setState(() {
-            isPaused = true;
-          });
-        }
-      } else {
-        // Start recording
-        await _controller!.prepareForVideoRecording();
+  Future<void> startVideoRecording() async {
+    if (_controller != null && _controller!.value.isInitialized) {
+      try {
         await _controller!.startVideoRecording();
-        _startRecordingTimer();
         setState(() {
           isRecording = true;
           isPaused = false;
         });
+        _startRecordingTimer();
+      } catch (e) {
+        print("Lỗi khi bắt đầu quay video: $e");
       }
-    } catch (e) {
-      print("Error recording video: $e");
     }
   }
 
-Future<void> _stopRecording() async {
-  if (isRecording && !isPaused) {
-    try {
-      // Stop video recording
-      final XFile videoFile = await _controller!.stopVideoRecording();
-      _stopRecordingTimer();
-
-      setState(() {
-        isRecording = false;
-        isPaused = false;
-        _capturedFile = videoFile; // Save the recorded video file
-      });
-
-      // Show the video player
-      _showVideoPlayer();
-
-    } catch (e) {
-      print("Error stopping video recording: $e");
+  Future<void> pauseVideoRecording() async {
+    if (_controller != null && _controller!.value.isRecordingVideo) {
+      try {
+        await _controller!.pauseVideoRecording();
+        setState(() {
+          isPaused = true;
+        });
+        _stopRecordingTimer();
+      } catch (e) {
+        print("Lỗi khi tạm dừng quay video: $e");
+      }
     }
   }
-}
+
+  Future<void> resumeVideoRecording() async {
+    if (_controller != null && isPaused) {
+      try {
+        await _controller!.resumeVideoRecording();
+        setState(() {
+          isPaused = false;
+        });
+        _startRecordingTimer();
+      } catch (e) {
+        print("Lỗi khi tiếp tục quay video: $e");
+      }
+    }
+  }
+
+  Future<void> stopVideoRecording() async {
+    if (_controller != null && _controller!.value.isRecordingVideo) {
+      try {
+        XFile file = await _controller!.stopVideoRecording();
+        _stopRecordingTimer();
+
+        Directory appDirectory = await getApplicationDocumentsDirectory();
+        String newPath = '${appDirectory.path}/${DateTime.now().millisecondsSinceEpoch}.mp4';
+        File tempFile = File(file.path);
+        await tempFile.copy(newPath);
+
+        setState(() {
+          isRecording = false;
+          isPaused = false;
+          capturedMedia = XFile(newPath);
+        });
+
+        print("Video đã lưu tại: $newPath");
+        goToNextStep();
+      } catch (e) {
+        print("Lỗi khi dừng quay video: $e");
+      }
+    }
+  }
 
   void _startRecordingTimer() {
-    _recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    _recordingTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       setState(() {
         _recordingDuration++;
       });
@@ -162,27 +184,26 @@ Future<void> _stopRecording() async {
     });
   }
 
-void _showVideoPlayer() async {
-  if (_capturedFile == null) return;
-
-  // Initialize video player controller
-  _videoPlayerController = VideoPlayerController.file(
-    File(_capturedFile!.path),
-  );
-
-  await _videoPlayerController!.initialize();
-  setState(() {});
-
-  // Play the video
-  await _videoPlayerController!.play();
-}
-
   @override
   void dispose() {
     _controller?.dispose();
     _videoPlayerController?.dispose();
     _stopRecordingTimer();
     super.dispose();
+  }
+
+  Future<void> _takePhoto() async {
+    if (!_controller!.value.isInitialized) return;
+    try {
+      final XFile file = await _controller!.takePicture();
+      setState(() {
+        _capturedFile = file;
+        capturedMedia = file;
+      });
+      goToNextStep();
+    } catch (e) {
+      print("Error taking photo: $e");
+    }
   }
 
   @override
@@ -209,52 +230,42 @@ void _showVideoPlayer() async {
               ),
             ),
 
-          // Timer during recording
           if (isRecording)
             Positioned(
-              top: 40,
-              left: 20,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  "Recording: ${_recordingDuration}s",
-                  style: const TextStyle(color: Colors.white, fontSize: 16),
+              bottom: 140,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    "Recording: ${_recordingDuration}s",
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                  ),
                 ),
               ),
             ),
 
-          // Switch camera button
           Positioned(
             top: 40,
             right: 20,
             child: IconButton(
               onPressed: _switchCamera,
-              icon: const Icon(
-                Icons.cameraswitch,
-                color: Colors.white,
-                size: 30,
-              ),
+              icon: const Icon(Icons.cameraswitch, color: Colors.white, size: 30),
             ),
           ),
 
-          // Toggle mode button
           Positioned(
             top: 40,
             left: 20,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black54,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               ),
               onPressed: () {
                 setState(() {
@@ -270,7 +281,6 @@ void _showVideoPlayer() async {
             ),
           ),
 
-          // Capture/Record button
           Positioned(
             bottom: 40,
             left: 0,
@@ -279,7 +289,15 @@ void _showVideoPlayer() async {
               child: GestureDetector(
                 onTap: () {
                   if (isRecordingMode) {
-                    _startStopRecording();
+                    if (isRecording) {
+                      if (isPaused) {
+                        resumeVideoRecording();
+                      } else {
+                        pauseVideoRecording();
+                      }
+                    } else {
+                      startVideoRecording();
+                    }
                   } else {
                     _takePhoto();
                   }
@@ -288,10 +306,9 @@ void _showVideoPlayer() async {
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
-                    color:
-                        isRecordingMode
-                            ? (isRecording ? Colors.red : Colors.white)
-                            : Colors.white,
+                    color: isRecordingMode
+                        ? (isRecording ? Colors.red : Colors.white)
+                        : Colors.white,
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.black, width: 3),
                   ),
@@ -307,39 +324,19 @@ void _showVideoPlayer() async {
             ),
           ),
 
-          // Stop recording button when paused
           if (isPaused)
             Positioned(
               bottom: 40,
               right: 20,
-              child: GestureDetector(
-                onTap: _stopRecording,
-                child: Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.black, width: 3),
-                  ),
-                  child: const Icon(Icons.stop, color: Colors.white, size: 40),
-                ),
+              child: TextButton(
+                onPressed: stopVideoRecording,
+                child: const Text('Stop', style: TextStyle(color: Colors.white, fontSize: 20)),
               ),
             ),
         ],
       ),
     );
   }
-
-  Future<void> _takePhoto() async {
-    if (!_controller!.value.isInitialized) return;
-    try {
-      final XFile file = await _controller!.takePicture();
-      setState(() {
-        _capturedFile = file;
-      });
-    } catch (e) {
-      print("Error taking photo: $e");
-    }
-  }
 }
+
+// Dummy ResultScreen class (bạn có thể thay thế bằng màn hình thật)

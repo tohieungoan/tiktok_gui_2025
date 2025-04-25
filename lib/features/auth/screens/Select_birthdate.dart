@@ -1,6 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:tiktok_app/blocs/user/user_bloc.dart';
 import 'package:tiktok_app/core/constants.dart';
+import 'package:tiktok_app/features/profile/controller/get_current_user_by_token.dart';
+import 'package:tiktok_app/models/User.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:tiktok_app/blocs/user/user_bloc.dart';
 
 class SelectBirthdate extends StatefulWidget {
   const SelectBirthdate({super.key});
@@ -13,6 +18,7 @@ class _SelectBirthdateState extends State<SelectBirthdate> {
   int selectedDay = 1;
   int selectedMonth = 1;
   int selectedYear = 2000;
+  Userapp? _currentUser;
 
   final List<int> _years = List.generate(
     100,
@@ -27,6 +33,7 @@ class _SelectBirthdateState extends State<SelectBirthdate> {
   void initState() {
     super.initState();
     _updateDateText();
+    _fetchUser();
   }
 
   int _daysInMonth(int month, int year) {
@@ -52,11 +59,35 @@ class _SelectBirthdateState extends State<SelectBirthdate> {
     _dateController.text = '$selectedDay/$selectedMonth/$selectedYear';
   }
 
+  void _fetchUser() async {
+    Userapp? user = await GetUserByToken.getUserByToken();
+    if (mounted) {
+      setState(() {
+        _currentUser = user;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    if (_currentUser == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.trang,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
-    return Scaffold(
+   return WillPopScope(
+  onWillPop: () async {
+    Navigator.pushReplacementNamed(
+      context,
+      '/Home',
+      arguments: _currentUser,
+    );
+    return false; // Ngăn mặc định pop
+  },
+  child: Scaffold(
       backgroundColor: AppColors.trang,
       appBar: AppBar(
         elevation: 0,
@@ -64,7 +95,13 @@ class _SelectBirthdateState extends State<SelectBirthdate> {
         foregroundColor: Colors.black,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            Navigator.pushReplacementNamed(
+              context,
+              '/Home',
+              arguments: _currentUser,
+            );
+          },
         ),
       ),
       body: Padding(
@@ -188,10 +225,34 @@ class _SelectBirthdateState extends State<SelectBirthdate> {
 
             SizedBox(
               width: double.infinity,
+              
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/verifyemail');
+                onPressed: () async {
+                  if (_currentUser != null) {
+                    String newBirthdate =
+                        '$selectedYear-$selectedMonth-$selectedDay';
+
+                    BlocProvider.of<UserBloc>(context).add(
+                      UpdateUserEvent(
+                        Userapp(
+                          id: _currentUser?.id,
+                          birthdate: newBirthdate,
+                        ),
+                      ),
+                    );
+                    Navigator.pushReplacementNamed(
+                      context,
+                      '/Home',
+                      arguments: _currentUser,
+                    );
+                  } else {
+                    Navigator.pushReplacementNamed(context, '/register');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Lỗi khi cập nhật")),
+                    );
+                  }
                 },
+
                 child: const Text(
                   "Tiếp theo",
                   style: TextStyle(
@@ -212,6 +273,7 @@ class _SelectBirthdateState extends State<SelectBirthdate> {
           ],
         ),
       ),
-    );
+    ));
+  
   }
 }

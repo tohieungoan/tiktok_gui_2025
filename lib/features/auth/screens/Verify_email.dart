@@ -83,7 +83,11 @@ class _VerifyEmailState extends State<VerifyEmail> {
                 ),
                 TextButton(
                   onPressed: () {
-                    Navigator.pop(context);
+                    Navigator.pushNamed(
+                      context,
+                      '/enterpassword',
+                      arguments: widget.email,
+                    );
                   },
                   child: const Text(
                     'Chuyển sang dùng mật khẩu',
@@ -246,7 +250,7 @@ class _VerifyEmailState extends State<VerifyEmail> {
               onPressed: () {
                 String otpCode = _otpControllers.map((c) => c.text).join();
                 print("Mã OTP nhập vào: $otpCode");
-                // Xử lý tiếp tục sau khi xác minh 
+                // Xử lý tiếp tục sau khi xác minh
                 Navigator.pushNamed(context, '/Home');
               },
               icon: null,

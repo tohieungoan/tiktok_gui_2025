@@ -5,16 +5,21 @@ import 'package:tiktok_app/features/auth/screens/Login_screen.dart';
 import 'package:tiktok_app/features/auth/screens/Register_screen.dart';
 import 'package:tiktok_app/features/auth/screens/Select_birthdate.dart';
 import 'package:tiktok_app/features/auth/screens/Verify_email.dart';
+import 'package:tiktok_app/features/auth/screens/enter_password.dart';
 import 'package:tiktok_app/features/home/screens/Home.dart';
 import 'package:tiktok_app/features/home/screens/Other_Profile.dart';
 import 'package:tiktok_app/features/policy/Loading.dart';
+import 'package:tiktok_app/features/startup_screen.dart';
+import 'package:tiktok_app/models/User.dart';
 
 class AppRoutes {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
+      // case '/':
+      //   return MaterialPageRoute(builder: (_) => const Loading());
+      case '/startup':
+        return MaterialPageRoute(builder: (_) => StartupScreen());
       case '/':
-        return MaterialPageRoute(builder: (_) => const Loading());
-      case '/login':
         return _createRoute(LoginScreen(), true);
       case '/register':
         return _createRoute(
@@ -22,7 +27,10 @@ class AppRoutes {
           false,
         ); // Trang Register trượt từ bên trái
       case '/createpassword':
-        return MaterialPageRoute(builder: (_) => const Createpassword());
+        final email = settings.arguments as String;
+        return MaterialPageRoute(
+          builder: (_) => Createpassword(email: email),
+        ); // Trang CreatePassword không có hiệu ứng chuyển trang
       case '/selectbirthdate':
         return MaterialPageRoute(builder: (_) => const SelectBirthdate());
       case '/loginemail':
@@ -30,8 +38,12 @@ class AppRoutes {
       case '/verifyemail':
         final email = settings.arguments as String;
         return MaterialPageRoute(builder: (_) => VerifyEmail(email: email));
+      case '/enterpassword':
+        final email = settings.arguments as String;
+        return MaterialPageRoute(builder: (_) => Enterpassword(email: email));
       case '/Home':
-        return MaterialPageRoute(builder: (_) => const HomeScreen());
+        final user = settings.arguments as Userapp;
+        return MaterialPageRoute(builder: (_) => HomeScreen(user: user));
 
       case '/OtherProfile':
         final email = settings.arguments as String;
@@ -74,3 +86,5 @@ class AppRoutes {
     );
   }
 }
+
+
