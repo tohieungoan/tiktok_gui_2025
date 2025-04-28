@@ -1,4 +1,8 @@
+import 'package:cross_file/src/types/interface.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:tiktok_app/features/profile/controller/ImageController.dart';
+import 'package:tiktok_app/features/profile/controller/UserController.dart';
 import 'package:tiktok_app/features/profile/controller/get_current_user_by_token.dart';
 
 class StartupScreen extends StatefulWidget {
@@ -7,6 +11,15 @@ class StartupScreen extends StatefulWidget {
 }
 
 class _StartupScreenState extends State<StartupScreen> {
+  final UserController userController = Get.put(
+    UserController(),
+    permanent: true,
+  );
+  final ImageController imageController = Get.put(
+    ImageController(),
+    permanent: true,
+  );
+
   @override
   void initState() {
     super.initState();
@@ -16,26 +29,28 @@ class _StartupScreenState extends State<StartupScreen> {
   Future<void> _checkUser() async {
     try {
       final user = await GetUserByToken.getUserByToken();
-
       if (!mounted) return;
 
       if (user != null) {
-        print("Đăng nhập thành công");
-        Navigator.pushReplacementNamed(context, '/Home', arguments: user);
+        userController.setUser(user);
+        if (user.avatar != null) {
+          imageController.setAvatarUrl(user.avatar.toString());
+        } else {
+          imageController.setAvatarUrl(
+            "https://i.pinimg.com/236x/74/ff/3d/74ff3d21b7b1c3c9b050cbce04e81f35.jpg",
+          );
+        }
+        Get.offAllNamed('/Home');
       } else {
-        print("Chưa đăng nhập");
-        Navigator.pushReplacementNamed(context, '/');
+        Get.offAllNamed('/');
       }
     } catch (e) {
-      print("Lỗi kiểm tra user: $e");
-      if (mounted) Navigator.pushReplacementNamed(context, '/');
+      if (mounted) Get.offAllNamed('/');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
-    );
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }

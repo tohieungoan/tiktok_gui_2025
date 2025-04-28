@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:tiktok_app/blocs/auth/auth_bloc.dart';
-import 'package:tiktok_app/blocs/auth/auth_event.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:tiktok_app/core/constants.dart';
 import 'package:tiktok_app/core/widgets/CircularCheckbox.dart';
 import 'package:tiktok_app/core/widgets/button_login.dart';
@@ -92,11 +91,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           } else if (!regex.hasMatch(email)) {
                             showErrorToast("Email không hợp lệ");
                           } else {
-                            Navigator.pushNamed(
-                              context,
-                              '/createpassword',
-                              arguments: email,
-                            );
+                            Get.toNamed('/createpassword',arguments: email.toString());
                           }
                         },
                         icon: null,
@@ -118,8 +113,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     height: buttonHeight,
                     width: screenWidth * 0.9,
                     child: ButtonLogin(
-                      onPressed: () {
-                        _loginWithFacebook(context);
+                      onPressed: () async {
+                        await AuthService.signInWithFacebook(context: context);
                       },
                       icon: const FaIcon(
                         FontAwesomeIcons.facebook,
@@ -133,8 +128,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     height: buttonHeight,
                     width: screenWidth * 0.9,
                     child: ButtonLogin(
-                      onPressed: () {
-                        _loginWithGoogle(context);
+                      onPressed: () async {
+                        await AuthService.signInWithGoogle(context: context);
                       },
                       icon: const FaIcon(
                         FontAwesomeIcons.google,
@@ -197,7 +192,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      Navigator.pushReplacementNamed(context, '/');
+                     Get.offNamed('/');
                     },
                     child: Center(
                       child: Text(
@@ -218,22 +213,4 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     );
   }
-}
-
-void _loginWithFacebook(BuildContext context) {
-  BlocProvider.of<AuthBloc>(
-    context,
-  ).add(FacebookLoginRequested(context: context));
-}
-
-void _loginWithGoogle(BuildContext context) {
-  BlocProvider.of<AuthBloc>(
-    context,
-  ).add(GoogleLoginRequested(context: context));
-}
-
-void _loginWithEmail(BuildContext context, String email, String password) {
-  BlocProvider.of<AuthBloc>(context).add(
-    EmailLoginRequested(context: context, email: email, password: password),
-  );
 }

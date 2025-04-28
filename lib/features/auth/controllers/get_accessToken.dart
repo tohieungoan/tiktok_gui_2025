@@ -6,7 +6,7 @@ import 'package:tiktok_app/services/token_storage.dart';
 
 class getAcessService {
   static const String Url = "token/refresh/";
-    static Future<String?> getAccessToken() async {
+  static Future<String?> getAccessToken() async {
     try {
       String? refreshToken = await TokenStorage.getRefreshToken();
 
@@ -14,20 +14,17 @@ class getAcessService {
         print("Không tìm thấy refresh token!");
         return null;
       }
-      final Map<String, String> body = {
-        "refresh": refreshToken,
-      };
+      final Map<String, String> body = {"refresh": refreshToken};
 
       final response = await http.post(
         Uri.parse(Config.baseUrl + Url),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
         body: jsonEncode(body),
       );
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         String accessToken = responseData['access'];
+        print("Access token: $accessToken");
         return accessToken;
       } else {
         print("Lỗi khi lấy access token: ${response.statusCode}");

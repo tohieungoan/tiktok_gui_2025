@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:tiktok_app/core/constants.dart';
 import 'package:tiktok_app/features/home/widgets/CoumnItem.dart';
 import 'package:tiktok_app/features/home/widgets/search_delegate.dart';
+import 'package:tiktok_app/features/profile/controller/UserController.dart';
 
 class HomeScreenContent extends StatefulWidget {
   const HomeScreenContent({super.key});
@@ -16,6 +19,8 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final userController = Get.find<UserController>();
+    final user = userController.user.value;
 
     return Scaffold(
       appBar: AppBar(

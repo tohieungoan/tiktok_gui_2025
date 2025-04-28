@@ -1,11 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:tiktok_app/blocs/user/user_bloc.dart';
+import 'package:get/route_manager.dart';
 import 'package:tiktok_app/core/constants.dart';
+import 'package:tiktok_app/features/profile/controller/UpdateUser.dart';
 import 'package:tiktok_app/features/profile/controller/get_current_user_by_token.dart';
 import 'package:tiktok_app/models/User.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:tiktok_app/blocs/user/user_bloc.dart';
 
 class SelectBirthdate extends StatefulWidget {
   const SelectBirthdate({super.key});
@@ -78,202 +77,191 @@ class _SelectBirthdateState extends State<SelectBirthdate> {
       );
     }
 
-   return WillPopScope(
-  onWillPop: () async {
-    Navigator.pushReplacementNamed(
-      context,
-      '/Home',
-      arguments: _currentUser,
-    );
-    return false; // Ngăn mặc định pop
-  },
-  child: Scaffold(
-      backgroundColor: AppColors.trang,
-      appBar: AppBar(
-        elevation: 0,
+    return WillPopScope(
+      onWillPop: () async {
+        Get.offNamed('/Home');
+        return false; // Ngăn mặc định pop
+      },
+      child: Scaffold(
         backgroundColor: AppColors.trang,
-        foregroundColor: Colors.black,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pushReplacementNamed(
-              context,
-              '/Home',
-              arguments: _currentUser,
-            );
-          },
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: AppColors.trang,
+          foregroundColor: Colors.black,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              Get.offNamed('/Home');
+            },
+          ),
         ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    "Ngày sinh của bạn là ngày nào?",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: screenWidth * 0.08,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Image.asset(
-                  'assets/images/cake.png',
-                  width: screenWidth * 0.25,
-                  fit: BoxFit.contain,
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            TextField(
-              readOnly: true,
-              controller: _dateController,
-              decoration: InputDecoration(
-                hintText: 'Ngày sinh',
-                suffixIcon: const Icon(Icons.calendar_today),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            /// Cupertino Pickers
-            SizedBox(
-              height: 180,
-              child: Row(
+        body: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  /// Day Picker
                   Expanded(
-                    child: CupertinoPicker(
-                      itemExtent: 80,
-                      scrollController: FixedExtentScrollController(
-                        initialItem:
-                            (_days.contains(selectedDay)) ? selectedDay - 1 : 0,
+                    child: Text(
+                      "Ngày sinh của bạn là ngày nào?",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: screenWidth * 0.08,
                       ),
-                      onSelectedItemChanged: (index) {
-                        setState(() {
-                          selectedDay = _days[index];
-                          _updateDateText();
-                        });
-                      },
-                      children:
-                          _days
-                              .map((day) => Center(child: Text('$day')))
-                              .toList(),
                     ),
                   ),
-
-                  /// Month Picker
-                  Expanded(
-                    child: CupertinoPicker(
-                      itemExtent: 80,
-                      scrollController: FixedExtentScrollController(
-                        initialItem:
-                            (_months.contains(selectedMonth))
-                                ? selectedMonth - 1
-                                : 0,
-                      ),
-                      onSelectedItemChanged: (index) {
-                        setState(() {
-                          selectedMonth = _months[index];
-                          _updateDays();
-                          _updateDateText();
-                        });
-                      },
-                      children:
-                          _months
-                              .map((month) => Center(child: Text('$month')))
-                              .toList(),
-                    ),
-                  ),
-
-                  /// Year Picker
-                  Expanded(
-                    child: CupertinoPicker(
-                      itemExtent: 80,
-                      scrollController: FixedExtentScrollController(
-                        initialItem:
-                            (_years.contains(selectedYear))
-                                ? _years.indexOf(selectedYear)
-                                : 0,
-                      ),
-                      onSelectedItemChanged: (index) {
-                        setState(() {
-                          selectedYear = _years[index];
-                          _updateDays();
-                          _updateDateText();
-                        });
-                      },
-                      children:
-                          _years
-                              .map((year) => Center(child: Text('$year')))
-                              .toList(),
-                    ),
+                  const SizedBox(width: 8),
+                  Image.asset(
+                    'assets/images/cake.png',
+                    width: screenWidth * 0.25,
+                    fit: BoxFit.contain,
                   ),
                 ],
               ),
-            ),
+              const SizedBox(height: 24),
 
-            const Spacer(),
-
-            SizedBox(
-              width: double.infinity,
-              
-              child: ElevatedButton(
-                onPressed: () async {
-                  if (_currentUser != null) {
-                    String newBirthdate =
-                        '$selectedYear-$selectedMonth-$selectedDay';
-
-                    BlocProvider.of<UserBloc>(context).add(
-                      UpdateUserEvent(
-                        Userapp(
-                          id: _currentUser?.id,
-                          birthdate: newBirthdate,
-                        ),
-                      ),
-                    );
-                    Navigator.pushReplacementNamed(
-                      context,
-                      '/Home',
-                      arguments: _currentUser,
-                    );
-                  } else {
-                    Navigator.pushReplacementNamed(context, '/register');
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Lỗi khi cập nhật")),
-                    );
-                  }
-                },
-
-                child: const Text(
-                  "Tiếp theo",
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.trang,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.dohong,
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  shape: RoundedRectangleBorder(
+              TextField(
+                readOnly: true,
+                controller: _dateController,
+                decoration: InputDecoration(
+                  hintText: 'Ngày sinh',
+                  suffixIcon: const Icon(Icons.calendar_today),
+                  border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
               ),
-            ),
-          ],
+
+              const SizedBox(height: 24),
+
+              /// Cupertino Pickers
+              SizedBox(
+                height: 180,
+                child: Row(
+                  children: [
+                    /// Day Picker
+                    Expanded(
+                      child: CupertinoPicker(
+                        itemExtent: 80,
+                        scrollController: FixedExtentScrollController(
+                          initialItem:
+                              (_days.contains(selectedDay))
+                                  ? selectedDay - 1
+                                  : 0,
+                        ),
+                        onSelectedItemChanged: (index) {
+                          setState(() {
+                            selectedDay = _days[index];
+                            _updateDateText();
+                          });
+                        },
+                        children:
+                            _days
+                                .map((day) => Center(child: Text('$day')))
+                                .toList(),
+                      ),
+                    ),
+
+                    /// Month Picker
+                    Expanded(
+                      child: CupertinoPicker(
+                        itemExtent: 80,
+                        scrollController: FixedExtentScrollController(
+                          initialItem:
+                              (_months.contains(selectedMonth))
+                                  ? selectedMonth - 1
+                                  : 0,
+                        ),
+                        onSelectedItemChanged: (index) {
+                          setState(() {
+                            selectedMonth = _months[index];
+                            _updateDays();
+                            _updateDateText();
+                          });
+                        },
+                        children:
+                            _months
+                                .map((month) => Center(child: Text('$month')))
+                                .toList(),
+                      ),
+                    ),
+
+                    /// Year Picker
+                    Expanded(
+                      child: CupertinoPicker(
+                        itemExtent: 80,
+                        scrollController: FixedExtentScrollController(
+                          initialItem:
+                              (_years.contains(selectedYear))
+                                  ? _years.indexOf(selectedYear)
+                                  : 0,
+                        ),
+                        onSelectedItemChanged: (index) {
+                          setState(() {
+                            selectedYear = _years[index];
+                            _updateDays();
+                            _updateDateText();
+                          });
+                        },
+                        children:
+                            _years
+                                .map((year) => Center(child: Text('$year')))
+                                .toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const Spacer(),
+
+              SizedBox(
+                width: double.infinity,
+
+                child: ElevatedButton(
+                  onPressed: () async {
+                    if (_currentUser != null) {
+                      String newBirthdate =
+                          '$selectedYear-$selectedMonth-$selectedDay';
+
+                      await UpdateUserController.updateUserapi(
+                        id: _currentUser!.id,
+                        birthdate: newBirthdate,
+                      );
+                      Get.offNamed('/Home');
+                    } else {
+                      Get.offNamed(
+                        '/Register',
+                        arguments: _currentUser!.email.toString(),
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Lỗi khi cập nhật")),
+                      );
+                    }
+                  },
+
+                  child: const Text(
+                    "Tiếp theo",
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.trang,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.dohong,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    ));
-  
+    );
   }
 }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:tiktok_app/core/constants.dart';
 import 'package:tiktok_app/core/widgets/button_login.dart';
 
@@ -88,11 +90,7 @@ class _LoginEmailState extends State<LoginEmail> {
               onPressed: () {
                 final email = _emailController.text.trim();
                 if (email.isNotEmpty) {
-                  Navigator.pushNamed(
-                    context,
-                    '/verifyemail',
-                    arguments: email,
-                  );
+                  Get.toNamed('/verifyemail', arguments: email);
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text("Vui lòng nhập email")),

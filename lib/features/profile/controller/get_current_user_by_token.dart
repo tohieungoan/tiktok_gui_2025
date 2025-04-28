@@ -6,7 +6,7 @@ import 'package:tiktok_app/features/auth/controllers/get_accessToken.dart';
 import 'package:tiktok_app/models/User.dart';
 
 class GetUserByToken {
-  static const String Url = "user/current-user/";
+  static const String Url = "user/";
   static Future<Userapp?> getUserByToken() async {
     try {
       String? accessToken = await getAcessService.getAccessToken();
@@ -22,7 +22,7 @@ class GetUserByToken {
         },
       );
       if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
+        final responseData = jsonDecode(utf8.decode(response.bodyBytes));
         Userapp user = Userapp.fromJson(responseData);
         print("Thông tin người dùng: ${user.toJson()}");
         return user;

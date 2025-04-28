@@ -21,7 +21,7 @@ class UpdateUserController {
     String? avatar,
   }) async {
     final Map<String, dynamic> body = {};
-
+ 
     if (email != null) body['email'] = email;
     if (username != null) body['username'] = username;
     if (firstname != null) body['firstname'] = firstname;
@@ -29,16 +29,12 @@ class UpdateUserController {
     if (password != null) body['password'] = password;
     if (phone != null) body['phone'] = phone;
 
-    // Giữ nguyên birthdate dưới dạng chuỗi nếu có
-    if (birthdate != null) {
-      body['birthdate'] = birthdate; // Đảm bảo rằng nó là một chuỗi
-    }
+    if (birthdate != null) body['birthdate'] = birthdate;
 
     if (gender != null) body['gender'] = gender;
     if (bio != null) body['bio'] = bio;
     if (avatar != null) body['avatar'] = avatar;
 
-    print("url: " + Config.baseUrl + '$url$id/');
     print(
       "Body data: ${jsonEncode(body)}",
     ); // Kiểm tra xem body có được mã hóa thành chuỗi JSON đúng
@@ -52,12 +48,12 @@ class UpdateUserController {
     print("Access token: $accessToken");
 
     final response = await http.patch(
-      Uri.parse(Config.baseUrl + '$url$id/'),
+      Uri.parse(Config.baseUrl + '$url'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $accessToken',
       },
-      body: jsonEncode(body), 
+      body: jsonEncode(body),
     );
 
     if (response.statusCode == 200) {

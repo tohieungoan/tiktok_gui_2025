@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:tiktok_app/blocs/auth/auth_bloc.dart';
-import 'package:tiktok_app/blocs/auth/auth_event.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:tiktok_app/core/constants.dart';
 import 'package:tiktok_app/core/widgets/button_login.dart';
 import 'package:tiktok_app/features/auth/controllers/auth_service.dart';
@@ -44,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
               width: screenWidth * 0.9,
               child: ButtonLogin(
                 onPressed: () {
-                  Navigator.pushNamed(context, '/loginemail');
+                  Get.toNamed('/loginemail');
                 },
                 icon: const FaIcon(FontAwesomeIcons.user, color: Colors.black),
                 text: const Text('Tiếp tục với email/ tên người dùng'),
@@ -55,8 +54,8 @@ class _LoginScreenState extends State<LoginScreen> {
               height: buttonHeight,
               width: screenWidth * 0.9,
               child: ButtonLogin(
-                onPressed: () {
-                  _loginWithFacebook(context);
+                onPressed: () async {
+                  await AuthService.signInWithFacebook(context: context);
                 },
                 icon: const FaIcon(
                   FontAwesomeIcons.facebook,
@@ -70,8 +69,8 @@ class _LoginScreenState extends State<LoginScreen> {
               height: buttonHeight,
               width: screenWidth * 0.9,
               child: ButtonLogin(
-                onPressed: () {
-                  _loginWithGoogle(context);
+                onPressed: () async {
+                  await AuthService.signInWithGoogle(context: context);
                 },
                 icon: const FaIcon(FontAwesomeIcons.google, color: Colors.red),
                 text: const Text('Tiếp tục với Google'),
@@ -128,7 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      Navigator.pushReplacementNamed(context, '/register');
+                      Get.offNamed('/register');
                     },
                     child: Text(
                       "Đăng ký",
@@ -147,22 +146,4 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-}
-
-void _loginWithFacebook(BuildContext context) {
-  BlocProvider.of<AuthBloc>(
-    context,
-  ).add(FacebookLoginRequested(context: context));
-}
-
-void _loginWithGoogle(BuildContext context) {
-  BlocProvider.of<AuthBloc>(
-    context,
-  ).add(GoogleLoginRequested(context: context));
-}
-
-void _loginWithEmail(BuildContext context, String email, String password) {
-  BlocProvider.of<AuthBloc>(context).add(
-    EmailLoginRequested(context: context, email: email, password: password),
-  );
 }

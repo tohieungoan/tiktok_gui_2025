@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:tiktok_app/features/home/screens/Resuilt.dart';
+import 'package:tiktok_app/features/upload/screens/Resuilt.dart';
+import 'package:tiktok_app/features/upload/controllers/gallery.dart';
 import 'package:video_player/video_player.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:image_picker/image_picker.dart'; // Thêm thư viện image_picker
 
 class UploadScreen extends StatefulWidget {
   const UploadScreen({super.key});
@@ -43,7 +44,8 @@ class _UploadScreenState extends State<UploadScreen> {
 
     if (cameraStatus.isGranted && micStatus.isGranted) {
       _initCamera();
-    } else if (cameraStatus.isPermanentlyDenied || micStatus.isPermanentlyDenied) {
+    } else if (cameraStatus.isPermanentlyDenied ||
+        micStatus.isPermanentlyDenied) {
       openAppSettings();
     } else {
       print("Permission denied for camera or microphone");
@@ -70,11 +72,14 @@ class _UploadScreenState extends State<UploadScreen> {
       ResolutionPreset.high,
       enableAudio: true,
     );
-    _controller!.initialize().then((_) {
-      if (mounted) setState(() {});
-    }).catchError((e) {
-      print("Error initializing camera: $e");
-    });
+    _controller!
+        .initialize()
+        .then((_) {
+          if (mounted) setState(() {});
+        })
+        .catchError((e) {
+          print("Error initializing camera: $e");
+        });
   }
 
   void goToNextStep() {
@@ -144,7 +149,8 @@ class _UploadScreenState extends State<UploadScreen> {
         _stopRecordingTimer();
 
         Directory appDirectory = await getApplicationDocumentsDirectory();
-        String newPath = '${appDirectory.path}/${DateTime.now().millisecondsSinceEpoch}.mp4';
+        String newPath =
+            '${appDirectory.path}/${DateTime.now().millisecondsSinceEpoch}.mp4';
         File tempFile = File(file.path);
         await tempFile.copy(newPath);
 
@@ -197,12 +203,24 @@ class _UploadScreenState extends State<UploadScreen> {
     try {
       final XFile file = await _controller!.takePicture();
       setState(() {
-        _capturedFile = file;
         capturedMedia = file;
       });
       goToNextStep();
     } catch (e) {
       print("Error taking photo: $e");
+    }
+  }
+
+  // Thêm phương thức để chọn ảnh từ gallery
+  Future<void> _pickImageFromGallery() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _capturedFile = image;
+        capturedMedia = image;
+      });
+      goToNextStep();
     }
   }
 
@@ -214,6 +232,7 @@ class _UploadScreenState extends State<UploadScreen> {
 
     return Scaffold(
       body: Stack(
+        
         children: [
           if (_capturedFile == null)
             CameraPreview(_controller!)
@@ -237,7 +256,10 @@ class _UploadScreenState extends State<UploadScreen> {
               right: 0,
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black54,
                     borderRadius: BorderRadius.circular(8),
@@ -255,7 +277,11 @@ class _UploadScreenState extends State<UploadScreen> {
             right: 20,
             child: IconButton(
               onPressed: _switchCamera,
-              icon: const Icon(Icons.cameraswitch, color: Colors.white, size: 30),
+              icon: const Icon(
+                Icons.cameraswitch,
+                color: Colors.white,
+                size: 30,
+              ),
             ),
           ),
 
@@ -265,7 +291,10 @@ class _UploadScreenState extends State<UploadScreen> {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black54,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
               ),
               onPressed: () {
                 setState(() {
@@ -306,9 +335,10 @@ class _UploadScreenState extends State<UploadScreen> {
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
-                    color: isRecordingMode
-                        ? (isRecording ? Colors.red : Colors.white)
-                        : Colors.white,
+                    color:
+                        isRecordingMode
+                            ? (isRecording ? Colors.red : Colors.white)
+                            : Colors.white,
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.black, width: 3),
                   ),
@@ -330,13 +360,32 @@ class _UploadScreenState extends State<UploadScreen> {
               right: 20,
               child: TextButton(
                 onPressed: stopVideoRecording,
-                child: const Text('Stop', style: TextStyle(color: Colors.white, fontSize: 20)),
+                child: const Text(
+                  'Stop',
+                  style: TextStyle(color: Colors.white, fontSize: 20),
+                ),
               ),
             ),
+          Positioned(
+            bottom: 60,
+            left: 20,
+            child: IconButton(
+              onPressed: () async {
+                XFile? media = await GetMediaGallery().pickMediaFromGallery();
+                setState(() {
+                  capturedMedia = media;
+                });
+                goToNextStep();
+              },
+              icon: const Icon(
+                Icons.photo_library, // Use the correct icon here
+                color: Colors.white,
+                size: 30,
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 }
-
-// Dummy ResultScreen class (bạn có thể thay thế bằng màn hình thật)

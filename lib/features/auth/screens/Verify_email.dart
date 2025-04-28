@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:tiktok_app/core/constants.dart';
 import 'package:tiktok_app/core/widgets/button_login.dart';
 
@@ -83,11 +85,7 @@ class _VerifyEmailState extends State<VerifyEmail> {
                 ),
                 TextButton(
                   onPressed: () {
-                    Navigator.pushNamed(
-                      context,
-                      '/enterpassword',
-                      arguments: widget.email,
-                    );
+                    Get.toNamed("enterpassword", arguments: widget.email);
                   },
                   child: const Text(
                     'Chuyển sang dùng mật khẩu',
@@ -251,7 +249,6 @@ class _VerifyEmailState extends State<VerifyEmail> {
                 String otpCode = _otpControllers.map((c) => c.text).join();
                 print("Mã OTP nhập vào: $otpCode");
                 // Xử lý tiếp tục sau khi xác minh
-                Navigator.pushNamed(context, '/Home');
               },
               icon: null,
               backgroundColor: AppColors.dohong,
