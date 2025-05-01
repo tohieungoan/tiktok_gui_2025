@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:tiktok_app/features/profile/controller/ImageController.dart';
+import 'package:tiktok_app/features/profile/controller/UpdateUser.dart';
 import 'package:tiktok_app/features/upload/controllers/gallery.dart';
 
 class AvatarWidget extends StatelessWidget {
@@ -62,10 +63,15 @@ class EditIconButton extends StatelessWidget {
           ),
           onPressed: () async {
             // Chọn ảnh từ gallery
+            
             XFile? image = await GetMediaGallery().pickImageFromGallery();
             if (image != null) {
-              // Cập nhật ảnh đã chọn vào ImageController
               Get.find<ImageController>().setSelectedImage(image);
+
+              await UpdateUserController.updateUserapi(
+                avatarPath: image.path,
+              );
+              
             }
           },
         ),

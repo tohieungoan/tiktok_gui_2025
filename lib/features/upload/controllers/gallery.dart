@@ -9,7 +9,6 @@ class GetMediaGallery {
       final pickedImage = await _picker.pickImage(source: ImageSource.gallery);
 
       if (pickedImage != null) {
-        showSuccessToast("Ảnh được chọn: ${pickedImage.path}");
         return pickedImage;
       } else {
         showErrorToast("Chưa chọn ảnh nào.");

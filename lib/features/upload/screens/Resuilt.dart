@@ -139,22 +139,10 @@ class _ResultScreenState extends State<ResultScreen> {
                                 );
 
                                 // Ẩn thông báo tải lên và hiển thị thông báo thành công
-                                Get.snackbar(
-                                  "Upload thành công!",
-                                  "Video của bạn đã được đăng tải.",
-                                  backgroundColor: Colors.green.withOpacity(0.7),
-                                  colorText: Colors.white,
-                                  snackPosition: SnackPosition.BOTTOM,
-                                );
+                        
                               } catch (e) {
                                 // Hiển thị thông báo lỗi
-                                Get.snackbar(
-                                  "Lỗi tải lên!",
-                                  "Đã xảy ra lỗi trong quá trình upload.",
-                                  backgroundColor: Colors.red.withOpacity(0.7),
-                                  colorText: Colors.white,
-                                  snackPosition: SnackPosition.BOTTOM,
-                                );
+                        
                               }
                             }
                           },

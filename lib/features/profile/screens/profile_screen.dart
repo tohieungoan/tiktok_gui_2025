@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:tiktok_app/features/auth/controllers/auth_service.dart';
+import 'package:tiktok_app/features/home/controllers/PostController.dart';
 import 'package:tiktok_app/features/profile/controller/ImageController.dart';
 import 'package:tiktok_app/features/profile/widgets/avatar_widget.dart';
 import 'package:tiktok_app/models/User.dart';
@@ -8,28 +9,28 @@ import 'package:get/get.dart'; // Import GetX
 import 'package:tiktok_app/features/profile/controller/UserController.dart'; // Import UserController
 
 class ProfileScreen extends StatelessWidget {
-  ProfileScreen({super.key});
+  ProfileScreen({super.key}) {
+    Future.microtask(() {
+      postController.fetchMyPost(userController.user.value!.id.toString());
+    });
+  }
 
   final userController = Get.find<UserController>();
   final imageController = Get.find<ImageController>();
   final RxInt selectedIconIndex = 0.obs;
   final RxList<String> currentImages = <String>[].obs;
-  final List<List<String>> imageUrls = [
-    [
-      "https://picsum.photos/200/300",
-      "https://picsum.photos/200/300",
-      "https://picsum.photos/200/300",
-    ],
-    [
-      "https://picsum.photos/200/300",
-      "https://picsum.photos/200/300",
-      "https://picsum.photos/200/300",
-      "https://picsum.photos/200/300",
-      "https://picsum.photos/200/300",
-    ],
-    ["https://picsum.photos/200/300", "https://picsum.photos/200/300"],
-    ["https://picsum.photos/200/300"],
+  final PostController postController = Get.find<PostController>();
+
+  final List<String> imageList1 = [
+    "https://picsum.photos/200/300",
+    "https://picsum.photos/200/300",
+    "https://picsum.photos/200/300",
   ];
+  final List<String> imageList3 = [
+    "https://picsum.photos/200/300",
+    "https://picsum.photos/200/300",
+  ];
+  final List<String> imageList4 = ["https://picsum.photos/200/300"];
 
   @override
   Widget build(BuildContext context) {
@@ -110,9 +111,9 @@ class ProfileScreen extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildStatColumn("100", "Đã follow"),
+        _buildStatColumn("${userController.Following}", "Đã follow"),
         const SizedBox(width: 20),
-        _buildStatColumn("200", "Follow"),
+        _buildStatColumn("${userController.Follower}", "Follow"),
         const SizedBox(width: 20),
         _buildStatColumn("300", "Thích"),
         IconButton(
@@ -167,10 +168,40 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  void _changeImages(int index) {
-    selectedIconIndex.value = index;
-    currentImages.value = imageUrls[index];
+void _changeImages(int index) {
+  selectedIconIndex.value = index;
+
+  // Chọn hình ảnh từ danh sách riêng biệt
+  switch (index) {
+    case 0:
+      currentImages.value = imageList1;
+      break;
+    case 1:
+      if (postController.mypost != null && postController.mypost.isNotEmpty) {
+        currentImages.value = postController.mypost
+            .map((post) {
+              String mediaUrl = post.media ?? ''; // Lấy media URL từ post
+              if (mediaUrl.endsWith('.mp4')) {
+                // Nếu URL có đuôi .mp4 thì thay thế thành .jpg
+                mediaUrl = mediaUrl.replaceAll(RegExp(r'\.mp4$'), '.jpg');
+              }
+              return mediaUrl;
+            })
+            .whereType<String>() // Lọc ra các giá trị là String hợp lệ
+            .toList();
+      } else {
+        currentImages.value = []; // Nếu không có bài đăng, set danh sách rỗng
+      }
+      break;
+    case 2:
+      currentImages.value = imageList3;
+      break;
+    case 3:
+      currentImages.value = imageList4;
+      break;
   }
+}
+
 
   void _logout(context) async {
     await AuthService.logout(context);

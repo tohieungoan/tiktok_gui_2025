@@ -100,9 +100,7 @@ class EditProfileScreen extends StatelessWidget {
                                       imageController.setSelectedImage(
                                         imageFile,
                                       ); // Cập nhật ảnh tạm thời
-                                      print(
-                                        "Image selected: ${imageFile.path}",
-                                      );
+                               
                                     }
                                   },
                                   child: CircleAvatar(
@@ -285,7 +283,6 @@ class EditProfileScreen extends StatelessWidget {
       }
 
       await UpdateUserController.updateUserapi(
-        id: userController.user.value?.id,
         firstname: firstName,
         lastname: lastName,
         username: username,
@@ -293,6 +290,7 @@ class EditProfileScreen extends StatelessWidget {
         phone: phone,
         birthdate: formattedDate,
         gender: gender,
+        avatarPath: imageController.selectedImage.value?.path,
       );
 
       // Cập nhật lại UserController
@@ -310,7 +308,6 @@ class EditProfileScreen extends StatelessWidget {
 
       userController.updateUser(updatedUser);
 
-      Get.back(); // Quay lại màn trước
     } catch (e) {
       print('Lỗi khi lưu thay đổi: $e');
     }

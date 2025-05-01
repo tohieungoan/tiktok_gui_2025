@@ -6,7 +6,7 @@ class ButtonLogin extends StatelessWidget {
   final Widget? icon; // Đặt icon là có thể null
   final Text text;
   final Color? backgroundColor; // Thêm tham số để truyền màu nền
-  final Color? textColor; // Thêm tham số để truyền màu chữ
+  final Color? textColor;
 
   const ButtonLogin({
     super.key,

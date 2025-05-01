@@ -58,7 +58,7 @@ class AppRoutes {
     ),
     GetPage(
       name: '/OtherProfile',
-      page: () => OtherProfile(email: Get.arguments), 
+      page: () => OtherProfile(user: Get.arguments), 
     ),
   ];
 }

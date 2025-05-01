@@ -5,6 +5,9 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:tiktok_app/config/config.dart';
+import 'package:tiktok_app/features/auth/controllers/get_accessToken.dart';
+import 'package:tiktok_app/features/home/controllers/ApiFollow.dart';
+import 'package:tiktok_app/features/home/controllers/PostController.dart';
 import 'package:tiktok_app/features/profile/controller/ImageController.dart';
 import 'package:tiktok_app/features/profile/controller/UserController.dart';
 import 'package:tiktok_app/features/profile/controller/get_current_user_by_token.dart';
@@ -217,7 +220,13 @@ class AuthService {
             "https://i.pinimg.com/236x/74/ff/3d/74ff3d21b7b1c3c9b050cbce04e81f35.jpg",
           );
         }
-
+        final PostController postController = Get.put(
+          PostController(),
+          permanent: true,
+        );
+        await postController.fetchRandomPost();
+        await ApiFollow.GetFollower(context: context, iduser: user.id.toString());
+        await ApiFollow.GetFollowing(context: context, iduser: user.id.toString());
         Get.offAllNamed('/Home');
         return jsonDecode(response.body); // Trả về dữ liệu từ server
       } else if (response.statusCode == 400 || response.statusCode == 404) {
@@ -244,44 +253,44 @@ class AuthService {
   //   await TokenStorage.clearRefreshToken();
   // }
   // Đăng xuất
-static Future<void> logout(BuildContext context) async {
-  try {
-    final refreshToken = await TokenStorage.getRefreshToken();
+  static Future<void> logout(BuildContext context) async {
+    try {
+      final refreshToken = await TokenStorage.getRefreshToken();
+      final accessToken = await getAcessService.getAccessToken();
 
-    if (refreshToken == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Không tìm thấy refresh token')),
+      if (refreshToken == null || accessToken == null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Không tìm thấy token')));
+        return;
+      }
+
+      final response = await http.post(
+        Uri.parse(Config.baseUrl + 'auth/logout/'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Accept': 'application/json',
+          'Authorization':
+              'Bearer $accessToken', // 👈 Truyền access token vào đây
+        },
+        body: jsonEncode({'refresh': refreshToken}),
       );
-      return;
-    }
 
-    final response = await http.post(
-      Uri.parse(Config.baseUrl + 'auth/logout/'),
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-        'Accept': 'application/json',
-      },
-      body: jsonEncode({'refresh': refreshToken}),
-    );
-
-    if (response.statusCode == 204) {
-      // Logout thành công
       final UserController userController = Get.find<UserController>();
       userController.clearUser();
-      await TokenStorage.clearRefreshToken();
-      Get.offAllNamed('/Login'); // Quay về trang Login
-    } else {
-      print('❌ Lỗi logout: ${response.body}');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Đăng xuất thất bại: ${response.body}')),
-      );
-    }
-  } catch (e) {
-    print("❌ Lỗi khi logout: $e");
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Lỗi khi kết nối tới server: $e')),
-    );
-  }
-}
 
+      if (response.statusCode == 205) {
+        await TokenStorage.clearRefreshToken();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Đăng xuất thất bại: ${response.body}')),
+        );
+      }
+    } catch (e) {
+      print("❌ Lỗi khi logout: $e");
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Lỗi khi kết nối tới server: $e')));
+    }
+  }
 }

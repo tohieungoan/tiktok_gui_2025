@@ -226,7 +226,6 @@ class _SelectBirthdateState extends State<SelectBirthdate> {
                           '$selectedYear-$selectedMonth-$selectedDay';
 
                       await UpdateUserController.updateUserapi(
-                        id: _currentUser!.id,
                         birthdate: newBirthdate,
                       );
                       Get.offNamed('/Home');
