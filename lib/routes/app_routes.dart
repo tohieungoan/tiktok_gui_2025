@@ -9,6 +9,7 @@ import 'package:tiktok_app/features/auth/screens/enter_password.dart';
 import 'package:tiktok_app/features/home/screens/Home.dart';
 import 'package:tiktok_app/features/home/screens/Other_Profile.dart';
 import 'package:tiktok_app/features/policy/Loading.dart';
+import 'package:tiktok_app/features/profile/screens/Settings.dart';
 import 'package:tiktok_app/features/profile/screens/change_profile.dart';
 import 'package:tiktok_app/features/startup_screen.dart';
 
@@ -60,5 +61,8 @@ class AppRoutes {
       name: '/OtherProfile',
       page: () => OtherProfile(user: Get.arguments), 
     ),
+    GetPage(name: "/Settings",
+    page : () => SettingsPage()
+    )
   ];
 }

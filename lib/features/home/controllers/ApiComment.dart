@@ -42,9 +42,7 @@ class ApiComments {
         postController.toggleComment(currentPost);
         return jsonDecode(response.body);
       } else if (response.statusCode == 400) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Yêu cầu không hợp lệ.')));
+     Get.snackbar("Phát hiện bình luận tiêu cực", "Xin hãy giữ bình tĩnh");
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Lỗi server: ${response.statusCode}')),

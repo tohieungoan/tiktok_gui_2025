@@ -50,7 +50,7 @@ class ProfileScreen extends StatelessWidget {
         actions: [
           IconButton(
             onPressed: () {
-              print("Setting pressed!");
+              Get.toNamed("/Settings");
             },
             icon: const FaIcon(FontAwesomeIcons.gear),
           ),
@@ -168,40 +168,40 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-void _changeImages(int index) {
-  selectedIconIndex.value = index;
+  void _changeImages(int index) {
+    selectedIconIndex.value = index;
 
-  // Chọn hình ảnh từ danh sách riêng biệt
-  switch (index) {
-    case 0:
-      currentImages.value = imageList1;
-      break;
-    case 1:
-      if (postController.mypost != null && postController.mypost.isNotEmpty) {
-        currentImages.value = postController.mypost
-            .map((post) {
-              String mediaUrl = post.media ?? ''; // Lấy media URL từ post
-              if (mediaUrl.endsWith('.mp4')) {
-                // Nếu URL có đuôi .mp4 thì thay thế thành .jpg
-                mediaUrl = mediaUrl.replaceAll(RegExp(r'\.mp4$'), '.jpg');
-              }
-              return mediaUrl;
-            })
-            .whereType<String>() // Lọc ra các giá trị là String hợp lệ
-            .toList();
-      } else {
-        currentImages.value = []; // Nếu không có bài đăng, set danh sách rỗng
-      }
-      break;
-    case 2:
-      currentImages.value = imageList3;
-      break;
-    case 3:
-      currentImages.value = imageList4;
-      break;
+    // Chọn hình ảnh từ danh sách riêng biệt
+    switch (index) {
+      case 0:
+        currentImages.value = imageList1;
+        break;
+      case 1:
+        if (postController.mypost != null && postController.mypost.isNotEmpty) {
+          currentImages.value =
+              postController.mypost
+                  .map((post) {
+                    String mediaUrl = post.media ?? ''; // Lấy media URL từ post
+                    if (mediaUrl.endsWith('.mp4')) {
+                      // Nếu URL có đuôi .mp4 thì thay thế thành .jpg
+                      mediaUrl = mediaUrl.replaceAll(RegExp(r'\.mp4$'), '.jpg');
+                    }
+                    return mediaUrl;
+                  })
+                  .whereType<String>() // Lọc ra các giá trị là String hợp lệ
+                  .toList();
+        } else {
+          currentImages.value = []; // Nếu không có bài đăng, set danh sách rỗng
+        }
+        break;
+      case 2:
+        currentImages.value = imageList3;
+        break;
+      case 3:
+        currentImages.value = imageList4;
+        break;
+    }
   }
-}
-
 
   void _logout(context) async {
     await AuthService.logout(context);

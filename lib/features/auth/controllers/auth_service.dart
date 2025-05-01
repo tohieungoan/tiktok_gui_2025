@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:tiktok_app/config/config.dart';
+import 'package:tiktok_app/features/auth/controllers/PasswordController.dart';
 import 'package:tiktok_app/features/auth/controllers/get_accessToken.dart';
 import 'package:tiktok_app/features/home/controllers/ApiFollow.dart';
 import 'package:tiktok_app/features/home/controllers/PostController.dart';
@@ -225,8 +226,14 @@ class AuthService {
           permanent: true,
         );
         await postController.fetchRandomPost();
-        await ApiFollow.GetFollower(context: context, iduser: user.id.toString());
-        await ApiFollow.GetFollowing(context: context, iduser: user.id.toString());
+        await ApiFollow.GetFollower(
+          context: context,
+          iduser: user.id.toString(),
+        );
+        await ApiFollow.GetFollowing(
+          context: context,
+          iduser: user.id.toString(),
+        );
         Get.offAllNamed('/Home');
         return jsonDecode(response.body); // Trả về dữ liệu từ server
       } else if (response.statusCode == 400 || response.statusCode == 404) {
@@ -281,6 +288,7 @@ class AuthService {
 
       if (response.statusCode == 205) {
         await TokenStorage.clearRefreshToken();
+        Get.toNamed("/");
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Đăng xuất thất bại: ${response.body}')),
@@ -291,6 +299,85 @@ class AuthService {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Lỗi khi kết nối tới server: $e')));
+    }
+  }
+
+  static Future<void> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final accessToken = await getAcessService.getAccessToken();
+
+      if (accessToken == null) {
+        Get.snackbar('Lỗi', 'Không tìm thấy access token');
+        return;
+      }
+
+      final response = await http.put(
+        Uri.parse(Config.baseUrl + 'user/'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $accessToken',
+        },
+        body: jsonEncode({
+          'old_password': oldPassword,
+          'new_password': newPassword,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final PasswordController passwordController =
+            Get.find<PasswordController>();
+        passwordController.isLengthValid.value = false;
+        passwordController.isComplexValid.value = false;
+        passwordController.hasSpecialChar.value = false;
+        final UserController userController = Get.find<UserController>();
+        userController.clearUser();
+        await TokenStorage.clearRefreshToken();
+        Get.snackbar('Thành công', 'Đổi mật khẩu thành công');
+
+        Get.toNamed("/");
+      } else {
+        Get.snackbar('Lỗi', 'Đổi mật khẩu thất bại: ${response.body}');
+      }
+    } catch (e) {
+      print("❌ Lỗi khi đổi mật khẩu: $e");
+      Get.snackbar('Lỗi', 'Lỗi khi kết nối tới server: $e');
+    }
+  }
+
+  static Future<void> deleteUser({required String idUser}) async {
+    try {
+      final accessToken = await getAcessService.getAccessToken();
+
+      if (accessToken == null) {
+        Get.snackbar('Lỗi', 'Không tìm thấy access token');
+        return;
+      }
+
+      final response = await http.delete(
+        Uri.parse('${Config.baseUrl}user/$idUser/'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
+      print("url ${Uri.parse('${Config.baseUrl}user/$idUser/')}");
+      if (response.statusCode == 204) {
+        final UserController userController = Get.find<UserController>();
+        userController.clearUser();
+        await TokenStorage.clearRefreshToken();
+        Get.snackbar('Thành công', 'Xóa người dùng thành công');
+        Get.toNamed("/");
+      } else {
+        Get.snackbar('Lỗi', 'Xóa người dùng thất bại: ${response.body}');
+      }
+    } catch (e) {
+      print("❌ Lỗi khi xóa người dùng: $e");
+      Get.snackbar('Lỗi', 'Lỗi khi kết nối tới server: $e');
     }
   }
 }
